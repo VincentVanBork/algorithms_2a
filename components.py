@@ -1,8 +1,18 @@
+import os
 import numpy as np
+import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib import cm
+from matplotlib.animation import FuncAnimation, FFMpegWriter
+
+matplotlib.use('tkagg')
 from function import rosenbrock
 from numpy.random import default_rng
+
+path_ffmpeg = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "ffmpeg", "bin", "ffmpeg.exe")
+print(path_ffmpeg)
+plt.rcParams['animation.ffmpeg_path'] = path_ffmpeg
 
 
 class Swarm:
@@ -30,9 +40,10 @@ class Swarm:
         self.velocities = np.random.rand(
             self.population_number, self.dimensions)
 
-        self.positions = np.random.randint(self.domain[0], self.domain[1],
-                                           size=(self.population_number,
-                                                 self.dimensions))
+        self.positions = np.random.rand(self.population_number,
+                                        self.dimensions)
+        self.positions = self.positions * (self.domain[1] - self.domain[0]) + \
+                         self.domain[0]
         self.particles = np.dstack((self.positions, self.velocities))
 
         self.update_average_position()
@@ -89,7 +100,7 @@ class Swarm:
                 # print("updated position")
                 # print(self.particles[alpha])
 
-        print(self.winners)
+        # print(self.winners)
 
     def update_velocity(self, particle, winner):
         rng = default_rng()
@@ -106,48 +117,95 @@ class Swarm:
         # print(particle)
         return particle
 
-        # r1, r2, r3 = np.random.choice(, replace = False, size(3))
-        #     self.velocity
-
     def update_position(self, particle):
         particle[:, 0] = particle[:, 0] + particle[:, 1]
+        for i in range(s.dimensions):
+            if particle[i, 0] > s.domain[1]:
+                particle[i, 0] = s.domain[1]
+            elif particle[i, 0] < s.domain[0]:
+                particle[i, 0] = s.domain[0]
+
         return particle
-
-    # def update_velocity(self, winner_position, average_position,
-    #                     influence_coefficient):
-    #
-
-    # class Particle:
-    #     def __init__(self, dimension, low, high):
-    #         self.position = np.random.randint(low, high, size=dimension)
-    #         self.velocity = np.random.rand(dimension)
-    #
-    #     def update_velocity(self, winner_position, average_position,
-    #     influence_coefficient):
-    #         r1, r2, r3 = np.random.rand(3)
-    #         self.velocity = (r1 * self.velocity) + \
-    #                         (r2 * (winner_position - self.position)) + \
-    #                         (influence_coefficient * r3 * (average_position -
-    #                         self.position))
 
 
 if __name__ == "__main__":
-    s = Swarm(population_number=6, influence_coefficient=0,
-              function=rosenbrock, dimensions=2,
-              domain=(-100, 100))
+    # swarms = []
+    # num_of_swarms = 5
+    # for i in range(num_of_swarms):
+    #     swarms.append(
+    #         Swarm(population_number=100, influence_coefficient=0,
+    #               function=rosenbrock, dimensions=30,
+    #               domain=(-2.048, 2.048)))
+    # for swarm in swarms:
+    #     swarm.initialize_swarm()
+    #     swarm.update_average_position()
+
+    s = Swarm(population_number=40, influence_coefficient=0.3,
+              function=rosenbrock, dimensions=30,
+              domain=(-2.048, 2.048))
     s.initialize_swarm()
     s.update_average_position()
-    for i in range(100):
-        s.iterate()
-    print(s.particles)
-    # print(s.average_position)
-    # s.tournament()
-    # print(s.particles[1])
+
+    # plt.show()
     # print(s.particles)
     # print(s.particles[:, :, 0])
-    # for sth in s.particles[:, :, 0]:
-    #     print(sth)
-    #     print(rosenbrock(sth))
-    # print(s.values)
     # print(s.particles[:, :, 0])
-    # print(np.mean(s.particles[:, :, 0], axis=0))
+    """----------------------------"""
+    # fig, ax = plt.subplots()
+    # scatter = ax.scatter(x=s.particles[:, 0, 0], y=s.particles[:, 1, 0])
+    #
+    # def update_scatter(i):
+    #     s.iterate()
+    #     scatter.set_offsets(s.particles[:, :, 0])
+    #     return scatter,
+
+    # anim = FuncAnimation(fig, update_scatter, interval=300, frames=100)
+    # anim.save('CSO_rosenbrock.gif')
+    # plt.show()
+
+    """----------------------------"""
+
+    fig_bar, ax_bar = plt.subplots()
+    bar = ax_bar.bar(x=range(len(s.values)), height=s.values)
+
+
+    def update_bar(i):
+        # print(f" iteration {i}")
+        s.iterate()
+        ax_bar.set_ylim(top=max(s.values))
+        for i in range(len(bar)):
+            bar[i].set_height(s.values[i])
+        return ax_bar,
+
+
+    anim = FuncAnimation(fig_bar, update_bar, interval=300, frames=1000,
+                         repeat=False)
+    anim.save('CSO_rosenbrock_values.mp4', writer=FFMpegWriter(),
+              progress_callback=lambda i, n: print(f"frame {i} of {n}"))
+    # plt.show()
+
+    """----------------------------"""
+
+    # fig_hist, ax_hist = plt.subplots()
+    # n_bins = int(s.population_number / 5) if int(
+    #     s.population_number / 5) > 10 else 10
+    # hist, _, bar_container = ax_hist.hist(s.values, bins=n_bins)
+    #
+    #
+    # def update_hist(i):
+    #
+    #     s.iterate()
+    #     # ax_hist.set_ylim(top=max(s.values))
+    #     n, _ = np.histogram(s.values, n_bins)
+    #     for count, rect in zip(n, bar_container.patches):
+    #         rect.set_height(count)
+    #     return bar_container.patches
+    #
+    #
+    # anim = FuncAnimation(fig_hist, update_hist, interval=100, save_count=1000,
+    #                      repeat=False)
+    # anim.save('CSO_rosenbrock_histogram.mp4', writer=FFMpegWriter(),
+    #           progress_callback=lambda i, n: print(f"frame {i} of {n}"))
+    # plt.show()
+
+    """________________________"""
