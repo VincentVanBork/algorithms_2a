@@ -60,6 +60,8 @@ class Swarm:
 
     def sub_swarm_tournaments(self):
         for sub_swarm in range(self.num_sub_swarms):
+            particles_sub = self.particles
+
             sub_swarm_id = sub_swarm + 1
             # print(sub_swarm_id)
             sub_swarm_particles = [
@@ -103,9 +105,11 @@ class Swarm:
 
     def _clear_winners(self):
         for particle in self.particles:
-            particle.position = 0
+            particle.place = 0
 
     def whole_swarm_tournament(self):
+        win_particles = self.particles
+        # print(win_particles)
         winners_particles = [
             particle.id for particle
             in self.particles
@@ -113,7 +117,7 @@ class Swarm:
         ]
 
         while len(winners_particles) >= 3:
-
+            particles = self.particles
             players = random.sample(winners_particles, 3)
 
             contestants = [self.particles[player] for player in players]
@@ -157,8 +161,11 @@ if __name__ == "__main__":
               num_sub_swarms=2,
               domain=(-2.048, 2.048),
               function=rosenbrock)
-    for i in range(2):
+    for i in range(100):
         print(i)
         s.sub_swarm_tournaments()
+        particles = s.particles
         s.whole_swarm_tournament()
-        print(min([particle.current_value for particle in s.particles]))
+        values_final = [particle.current_value for particle in s.particles]
+        print(min(values_final))
+        print(sum(values_final)/ len(values_final))
