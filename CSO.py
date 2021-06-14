@@ -180,7 +180,7 @@ if __name__ == "__main__":
 
     anim = FuncAnimation(fig_bar, update_bar, interval=300, frames=1000,
                          repeat=False)
-    anim.save('CSO_rosenbrock_values.mp4', writer=FFMpegWriter(),
+    anim.save('CSO_rosenbrock_values_test.mp4', writer=FFMpegWriter(),
               progress_callback=lambda i, n: print(f"frame {i} of {n}"))
     # plt.show()
 
