@@ -8,7 +8,7 @@ from matplotlib import cm
 from matplotlib.animation import FuncAnimation, FFMpegWriter
 
 matplotlib.use('tkagg')
-from function import rosenbrock
+from function import rosenbrock, ackley
 from numpy.random import default_rng
 
 path_ffmpeg = os.path.join(
@@ -127,15 +127,15 @@ class Butterfly:
 
 
 if __name__ == "__main__":
-    iters = 1000
+    iters = 2000
     s = MurderousButterflySwarm(
-        population_number=50, dimensions=20,
-        domain=(-2.048, 2.048),
-        function=rosenbrock,
-        switcheroo_probability=0.2,
+        population_number=20, dimensions=20,
+        domain=(-32, 32),
+        function=ackley,
+        switcheroo_probability=0.5,
         power_over_whelming=0.1,
         sensor_overload=0.01,
-        increment_for_a=((0.3 - 0.1) / iters) * 2,
+        increment_for_a=((0.7 - 0.1) / iters) * 4,
         max_a=0.3
     )
 
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     def update_bar(i):
         s.fly_the_butts()
         values = sorted([p.stimulus_intensity for p in s.butts])
-        ax_bar.set_ylim(top=max(values))
+        ax_bar.set_ylim(top=sum(values)/len(values))
         ax_bar.set_title(f"Frame of {i}")
         # print(values)
         for i in range(len(bar)):
@@ -156,7 +156,7 @@ if __name__ == "__main__":
         return ax_bar,
 
 
-    anim = FuncAnimation(fig_bar, update_bar, interval=300, frames=200,
+    anim = FuncAnimation(fig_bar, update_bar, interval=300, frames=iters,
                          repeat=False)
     plt.show()
 
