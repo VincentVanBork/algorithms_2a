@@ -168,50 +168,55 @@ class Particle:
 
 
 if __name__ == "__main__":
-    s = Swarm(population_number=12*3,
-              dimensions=20,
-              num_sub_swarms=4,
-              domain=(-2.048, 2.048),
-              function=rosenbrock)
+    for pop_n in [30, 50, 80, 120]:
+        for num_subs in [1, 2, 4, 8, 12]:
+            s = Swarm(population_number=pop_n,
+                      dimensions=20,
+                      num_sub_swarms=num_subs,
+                      domain=(-2.048, 2.048),
+                      function=rosenbrock)
 
-    # values_final = [particle.current_value for particle in s.particles]
-    # print(min(values_final))
-    # print(max(values_final))
-    # print(sum(values_final)/ len(values_final))
-    # for i in range(20000):
-    #     # print(i)
-    #     s.sub_swarm_tournaments()
-    #     particles = s.particles
-    #     s.whole_swarm_tournament()
-    #     values_final = [particle.current_value for particle in s.particles]
-    #
-    # print("FINAL")
-    # print(min(values_final))
-    # print(max(values_final))
-    # print(sum(values_final)/ len(values_final))
+            # values_final = [particle.current_value for particle in s.particles]
+            # print(min(values_final))
+            # print(max(values_final))
+            # print(sum(values_final)/ len(values_final))
+            # for i in range(20000):
+            #     # print(i)
+            #     s.sub_swarm_tournaments()
+            #     particles = s.particles
+            #     s.whole_swarm_tournament()
+            #     values_final = [particle.current_value for particle in s.particles]
+            #
+            # print("FINAL")
+            # print(min(values_final))
+            # print(max(values_final))
+            # print(sum(values_final)/ len(values_final))
 
-    fig_bar, ax_bar = plt.subplots()
-    heights = [p.current_value for p in s.particles]
-    bar = ax_bar.bar(x=range(len(s.particles)),
-                     height=heights)
-    # plt.show()
+            fig_bar, ax_bar = plt.subplots()
+            heights = [p.current_value for p in s.particles]
+            bar = ax_bar.bar(x=range(len(s.particles)),
+                             height=heights)
 
 
-    def update_bar(i):
-        s.sub_swarm_tournaments()
-        s.whole_swarm_tournament()
-        values = [p.current_value for p in s.particles]
-        ax_bar.set_ylim(top=max(values))
+            # plt.show()
 
-        # print(values)
-        for i in range(len(bar)):
-            bar[i].set_height(values[i])
-        return ax_bar,
+            def update_bar(i):
+                s.sub_swarm_tournaments()
+                s.whole_swarm_tournament()
+                values = [p.current_value for p in s.particles]
+                ax_bar.set_ylim(top=max(values))
 
-    anim = FuncAnimation(fig_bar, update_bar, interval=300, frames=1000,
-                         repeat=False)
-    anim.save('LCSO_rosenbrock_values.mp4', writer=FFMpegWriter(),
-              progress_callback=lambda i, n: print(f"frame {i} of {n}"))
-    # plt.show()
+                # print(values)
+                for i in range(len(bar)):
+                    bar[i].set_height(values[i])
+                return ax_bar,
 
-    """----------------------------"""
+
+            anim = FuncAnimation(fig_bar, update_bar, interval=300, frames=200,
+                                 repeat=False)
+            anim.save(f'LCSO_rosenbrock_sp{pop_n}_ns{num_subs}.mp4',
+                      writer=FFMpegWriter(),
+                      progress_callback=lambda i, n: print(f"frame {i} of {n}"))
+            # plt.show()
+
+            """----------------------------"""
