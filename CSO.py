@@ -139,12 +139,26 @@ if __name__ == "__main__":
     # for swarm in swarms:
     #     swarm.initialize_swarm()
     #     swarm.update_average_position()
+    #
+    global whole_swarm_position
+    global sub_swarms
 
-    s = Swarm(population_number=40, influence_coefficient=0.3,
-              function=rosenbrock, dimensions=30,
-              domain=(-2.048, 2.048))
-    s.initialize_swarm()
-    s.update_average_position()
+    sub_swarms = []
+    whole_swarm_position = []
+    num_of_sub_swarms = 4
+    test_population_number = int(160 /num_of_sub_swarms)
+    for i in range(num_of_sub_swarms):
+        s = Swarm(population_number=test_population_number, influence_coefficient=0.3,
+                  function=rosenbrock, dimensions=30,
+                  domain=(-2.048, 2.048))
+        s.initialize_swarm()
+        s.update_average_position()
+
+        sub_swarms.append(s)
+
+    all_particles = np.concatenate(tuple(subs.particles for subs in sub_swarms))
+
+    whole_swarm_position = np.mean(all_particles[:, :, 0], axis=0)
 
     # plt.show()
     # print(s.particles)
@@ -166,21 +180,34 @@ if __name__ == "__main__":
     """----------------------------"""
 
     fig_bar, ax_bar = plt.subplots()
-    bar = ax_bar.bar(x=range(len(s.values)), height=s.values)
+
+    # print(*all_values)
+    merged_all_values = np.concatenate(tuple(subs.values for subs in sub_swarms))
+    bar = ax_bar.bar(x=range(len(merged_all_values)), height=merged_all_values)
 
 
     def update_bar(i):
+        global whole_swarm_position
+        global sub_swarms
         # print(f" iteration {i}")
-        s.iterate()
-        ax_bar.set_ylim(top=max(s.values))
+        for sub_swarm in sub_swarms:
+            sub_swarm.iterate()
+
+        all_particles = np.concatenate(tuple(subs.particles for subs in sub_swarms))
+        whole_swarm_position = np.mean(all_particles[:, :, 0], axis=0)
+        print("WHOLE SWARM AVERAGE:", rosenbrock(whole_swarm_position))
+
+        merged_all_values = np.concatenate(tuple(subs.values for subs in sub_swarms))
+
+        ax_bar.set_ylim(top=max(merged_all_values))
         for i in range(len(bar)):
-            bar[i].set_height(s.values[i])
+            bar[i].set_height(merged_all_values[i])
         return ax_bar,
 
 
-    anim = FuncAnimation(fig_bar, update_bar, interval=300, frames=1000,
+    anim = FuncAnimation(fig_bar, update_bar, interval=300, frames=300,
                          repeat=False)
-    anim.save('CSO_rosenbrock_values_test.mp4', writer=FFMpegWriter(),
+    anim.save(f'CSO_rosenbrock_values_test_{num_of_sub_swarms}_{test_population_number}.mp4', writer=FFMpegWriter(),
               progress_callback=lambda i, n: print(f"frame {i} of {n}"))
     # plt.show()
 
