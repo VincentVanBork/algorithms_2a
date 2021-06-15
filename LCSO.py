@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter
 
 matplotlib.use('tkagg')
-from function import rosenbrock
+from function import rosenbrock, ackley
 from numpy.random import default_rng
 
 path_ffmpeg = os.path.join(
@@ -168,13 +168,13 @@ class Particle:
 
 
 if __name__ == "__main__":
-    for pop_n in [30, 50, 80, 120]:
-        for num_subs in [1, 2, 4, 8, 12]:
+    for pop_n in [50]:
+        for num_subs in [3]:
             s = Swarm(population_number=pop_n,
                       dimensions=20,
                       num_sub_swarms=num_subs,
-                      domain=(-2.048, 2.048),
-                      function=rosenbrock)
+                      domain=(-32, 32),
+                      function=ackley)
 
             # values_final = [particle.current_value for particle in s.particles]
             # print(min(values_final))
@@ -205,18 +205,18 @@ if __name__ == "__main__":
                 s.whole_swarm_tournament()
                 values = [p.current_value for p in s.particles]
                 ax_bar.set_ylim(top=max(values))
-
+                ax_bar.set_title(f"Iteration nr: {i}")
                 # print(values)
                 for i in range(len(bar)):
                     bar[i].set_height(values[i])
                 return ax_bar,
 
 
-            anim = FuncAnimation(fig_bar, update_bar, interval=300, frames=200,
+            anim = FuncAnimation(fig_bar, update_bar, interval=300, frames=250,
                                  repeat=False)
-            anim.save(f'LCSO_rosenbrock_sp{pop_n}_ns{num_subs}.mp4',
-                      writer=FFMpegWriter(),
-                      progress_callback=lambda i, n: print(f"frame {i} of {n}"))
-            # plt.show()
+            # anim.save(f'LCSO_rosenbrock_sp{pop_n}_ns{num_subs}.mp4',
+            #           writer=FFMpegWriter(),
+            #           progress_callback=lambda i, n: print(f"frame {i} of {n}"))
+            plt.show()
 
             """----------------------------"""

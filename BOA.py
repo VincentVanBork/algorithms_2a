@@ -1,5 +1,6 @@
+import copy
 import os
-from random import random
+import random
 
 import numpy as np
 import matplotlib
@@ -49,6 +50,7 @@ class MurderousButterflySwarm:
         self._initialize_positions(self.domain)
         self._update_values()
         self.best_butt = min(self.butts, key=lambda b: b.stimulus_intensity)
+        self.template = copy.deepcopy(self.butts)
 
     def _update_values(self):
         for butte in self.butts:
@@ -74,6 +76,46 @@ class MurderousButterflySwarm:
         for butte in self.butts:
             butte.calculate_fragrance(self.c, self.a)
 
+    def _cross_and_mutate_butter(self):
+        ...
+        for id_b, butte in enumerate(self.template):
+            bk = random.choice(self.template)
+            while butte.id != bk.id:
+                bk = random.choice(self.template)
+            if butte.stimulus_intensity < bk.stimulus_intensity:
+                butte.fragrance *= random.random()
+                # butte.calculate_stimulus(self.function)
+            else:
+                butte.fragrance = bk.fragrance
+
+            mutated_position = np.random.rand(self.dimensions)
+            mutated_position = mutated_position * (
+                    self.domain[1] - self.domain[0]) + self.domain[0]
+            if self.function(butte.position) > self.function(mutated_position):
+                butte.position = mutated_position
+                # butte.global_search(self.find_best_butt())
+
+            best_butt = min(self.template,
+                            key=lambda b: self.function(b.position))
+            print("BEST", best_butt.stimulus_intensity)
+            size_of_butts = len(self.template)
+            if random.random() < self.p or id_b in [size_of_butts - 1,
+                                                    size_of_butts - 2]:
+                butte.global_search(best_butt, self.template[id_b])
+            else:
+                butte.local_search(self.butts[id_b + 1],
+                                   self.butts[id_b + 2])
+
+            # butte.global_search(best_butt, butte)
+            for i in range(self.dimensions):
+                if butte.position[i] > self.domain[1]:
+                    butte.position[i] = self.domain[1]
+                elif butte.position[i] < self.domain[0]:
+                    butte.position[i] = self.domain[0]
+
+            butte.calculate_stimulus(self.function)
+            # butte.calculate_fragrance(self.c, self.a)
+
     def _increment_power_coeff(self):
         if self.a > self.max_a:
             self.a = self.max_a
@@ -83,23 +125,28 @@ class MurderousButterflySwarm:
     def fly_the_butts(self):
         self._calculate_whole_fragrance()
         best_butt = self.find_best_butt()
+        # best_butt = min(self.template, key=lambda b: self.function(b.position))
         for id_b, butte in enumerate(self.butts):
-            r = random()
+            r = random.random()
             size_of_butts = len(self.butts)
-            if random() < self.p or id_b in [size_of_butts - 1,
-                                             size_of_butts - 2]:
-                butte.global_search(best_butt)
+            if random.random() < self.p or id_b in [size_of_butts - 1,
+                                                    size_of_butts - 2]:
+                butte.global_search(best_butt, self.template[id_b])
             else:
-                butte.random_cray_cray(self.butts[id_b + 1],
-                                       self.butts[id_b + 2])
+                bk = random.choice(self.butts)
+                bk2 = random.choice(self.butts)
+                butte.local_search(bk, bk2)
+                # butte.local_search(self.butts[id_b + 1],
+                #                    self.butts[id_b + 2])
         self._update_values()
         self._increment_power_coeff()
+        self._cross_and_mutate_butter()
 
 
 class Butterfly:
     def __init__(self, b_id, dim):
         self.id = b_id
-        self.position = self.position = np.random.rand(dim)
+        self.position = np.random.rand(dim)
         self.fragrance: float = 0
         self.stimulus_intensity: float = 0
 
@@ -109,16 +156,17 @@ class Butterfly:
     def calculate_fragrance(self, c, a):
         self.fragrance = c * (self.stimulus_intensity ** a)
 
-    def global_search(self, best):
-        r = random()
+    def global_search(self, best, template):
+        r = random.random()
         # TODO: stimulus_intensity vs position of best
-        self.position = self.position + (
-                ((
-                             r ** 2) * best.stimulus_intensity) - self.position) * self.fragrance
-        # self.position = random() * self.position
+        self.position = \
+            self.position + \
+            (((
+                          r ** 2) * best.stimulus_intensity) - self.position) * self.fragrance
+        # self.position = random.random() * self.position
 
-    def random_cray_cray(self, after, afterparty):
-        r = random()
+    def local_search(self, after, afterparty):
+        r = random.random()
         self.position = \
             self.position + \
             (
@@ -127,28 +175,39 @@ class Butterfly:
 
 
 if __name__ == "__main__":
-    iters = 2000
+    iters = 100
+    population_num = 50
+    dimensioneses = 30
+    min_a = 0.1
+    max_a = 0.3
     s = MurderousButterflySwarm(
-        population_number=20, dimensions=20,
+        population_number=population_num, dimensions=dimensioneses,
         domain=(-32, 32),
         function=ackley,
-        switcheroo_probability=0.5,
-        power_over_whelming=0.1,
-        sensor_overload=0.01,
-        increment_for_a=((0.7 - 0.1) / iters) * 4,
-        max_a=0.3
+        switcheroo_probability=0.8,
+        power_over_whelming=0.01,
+        sensor_overload=min_a,
+        increment_for_a=((max_a - min_a) / iters),
+        max_a=max_a
     )
-
+    print("POP NUM", population_num)
+    print("DIM", dimensioneses)
+    print("functeion", s.function.__name__)
+    print("MAX_A", s.max_a)
+    print("INCREMENT", s.increment)
+    print("START A", s.a)
+    print("SWITCH", s.p)
     fig_bar, ax_bar = plt.subplots()
     heights = [p.stimulus_intensity for p in s.butts]
     bar = ax_bar.bar(x=range(len(s.butts)),
                      height=heights)
     values = [1]
 
+
     def update_bar(i):
         s.fly_the_butts()
         values = sorted([p.stimulus_intensity for p in s.butts])
-        ax_bar.set_ylim(top=sum(values)/len(values))
+        ax_bar.set_ylim(top=sum(values) / len(values))
         ax_bar.set_title(f"Frame of {i}")
         # print(values)
         for i in range(len(bar)):

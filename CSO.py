@@ -6,7 +6,7 @@ from matplotlib import cm
 from matplotlib.animation import FuncAnimation, FFMpegWriter
 
 matplotlib.use('tkagg')
-from function import rosenbrock
+from function import rosenbrock, ackley
 from numpy.random import default_rng
 
 path_ffmpeg = os.path.join(
@@ -149,8 +149,8 @@ if __name__ == "__main__":
     test_population_number = int(160 /num_of_sub_swarms)
     for i in range(num_of_sub_swarms):
         s = Swarm(population_number=test_population_number, influence_coefficient=0.3,
-                  function=rosenbrock, dimensions=30,
-                  domain=(-2.048, 2.048))
+                  function=ackley, dimensions=30,
+                  domain=(-32, 32))
         s.initialize_swarm()
         s.update_average_position()
 
